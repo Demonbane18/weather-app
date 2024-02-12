@@ -1,31 +1,62 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  Text,
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  ImageBackground,
+} from 'react-native';
 import * as Location from 'expo-location';
-import { Link } from 'expo-router';
-import { Text, View } from '@/components/Themed';
+import { FlatList } from 'react-native-gesture-handler';
+import ForecastItem from '@/components/ForecastItem';
+import { Stack } from 'expo-router';
+import LottieView from 'lottie-react-native';
+import { StatusBar } from 'expo-status-bar';
+
 const BASE_URL = `https://api.openweathermap.org/data/2.5`;
 const OPEN_WEATHER_KEY = process.env.EXPO_PUBLIC_OPEN_WEATHER_KEY;
+const bgImage =
+  'https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-images/1.jpg';
+
+type MainWeather = {
+  temp: number;
+  feels_like: number;
+  temp_min: number;
+  temp_max: number;
+  pressure: number;
+  humidity: number;
+  sea_level: number;
+  grnd_level: number;
+};
 
 type Weather = {
   name: string;
-  main: {
-    temp: number;
-    feels_like: number;
-    temp_min: number;
-    temp_max: number;
-    pressure: number;
-    humidity: number;
-  };
+  main: MainWeather;
+  weather: [
+    {
+      id: string;
+      main: string;
+      description: string;
+      icon: string;
+    }
+  ];
+};
+
+export type WeatherForecast = {
+  main: MainWeather;
+  dt: number;
 };
 
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject>();
   const [errorMsg, setErrorMsg] = useState('');
   const [weather, setWeather] = useState<Weather>();
+  const [forecast, setForecast] = useState<WeatherForecast[]>();
 
   useEffect(() => {
     if (location) {
       fetchWeather();
+      fetchForecast();
     }
   }, [location]);
 
@@ -56,17 +87,75 @@ export default function HomeScreen() {
     setWeather(data);
   };
 
+  const fetchForecast = async () => {
+    // api.openweathermap.org/data/2.5/forecast?lat=44.34&lon=10.99&appid={API key}
+    const unit = 'metric';
+    if (!location) {
+      return;
+    }
+
+    const results = await fetch(
+      `${BASE_URL}/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&appid=${OPEN_WEATHER_KEY}&units=${unit}`
+    );
+    const data = await results.json();
+    // console.log(JSON.stringify(data, null, 2));
+    setForecast(data.list);
+  };
+
   if (!weather) {
     return <ActivityIndicator />;
   }
   return (
-    <View style={styles.container}>
-      <Text style={styles.location}>{weather.name}</Text>
-      <Text style={styles.temp}>{Math.round(weather.main.temp)}°</Text>
-      <Link href="/splash/" style={styles.link}>
-        <Text style={styles.linkText}>Go to test splash screen!</Text>
-      </Link>
-    </View>
+    <ImageBackground source={{ uri: bgImage }} style={styles.container}>
+      <View
+        style={{
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        }}
+      />
+
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <View
+        lightColor="light"
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+      >
+        <LottieView
+          source={
+            weather.weather[0].main === 'Rain'
+              ? require('@/assets/lottie/rain.json')
+              : require('@/assets/lottie/sunny.json')
+          }
+          style={{
+            width: 200,
+            aspectRatio: 1,
+          }}
+          loop
+          autoPlay
+        />
+        <Text style={styles.location}>{weather.name}</Text>
+        <Text style={styles.temp}>{Math.round(weather.main.temp)}°</Text>
+        <Text style={styles.location}>{weather.weather[0].main}</Text>
+      </View>
+
+      <FlatList
+        data={forecast}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{
+          flexGrow: 0,
+          height: 150,
+          marginBottom: 40,
+        }}
+        contentContainerStyle={{
+          gap: 10,
+          paddingHorizontal: 10,
+        }}
+        renderItem={({ item }) => <ForecastItem forecast={item} />}
+      />
+
+      <StatusBar style="light" />
+    </ImageBackground>
   );
 }
 
@@ -83,8 +172,8 @@ const styles = StyleSheet.create({
   },
   temp: {
     fontFamily: 'InterBlack',
-    fontSize: 70,
-    color: 'gray',
+    fontSize: 150,
+    color: '#FEFEFE',
   },
   link: {
     marginTop: 15,
