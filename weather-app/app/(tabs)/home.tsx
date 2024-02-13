@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   Text,
   View,
@@ -12,6 +12,7 @@ import ForecastItem from '@/components/ForecastItem';
 import { Stack } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import { StatusBar } from 'expo-status-bar';
+import BottomSheet from '@gorhom/bottom-sheet';
 
 const BASE_URL = `https://api.openweathermap.org/data/2.5`;
 const OPEN_WEATHER_KEY = process.env.EXPO_PUBLIC_OPEN_WEATHER_KEY;
@@ -28,10 +29,14 @@ type MainWeather = {
   sea_level: number;
   grnd_level: number;
 };
+type Sys = {
+  country: string;
+};
 
 type Weather = {
   name: string;
   main: MainWeather;
+  sys: Sys;
   weather: [
     {
       id: string;
@@ -48,6 +53,7 @@ export type WeatherForecast = {
 };
 
 export default function HomeScreen() {
+  const snapPoints = useMemo(() => ['20%', '95%'], []);
   const [location, setLocation] = useState<Location.LocationObject>();
   const [errorMsg, setErrorMsg] = useState('');
   const [weather, setWeather] = useState<Weather>();
@@ -102,9 +108,23 @@ export default function HomeScreen() {
     setForecast(data.list);
   };
 
+  function setCountryName() {
+    const country = weather?.sys.country;
+    switch (country) {
+      case 'PH':
+        return 'Philippines';
+      case 'US':
+        return 'United States';
+      default:
+        return 'Invalid country';
+      //increase country names
+    }
+  }
+
   if (!weather) {
     return <ActivityIndicator />;
   }
+
   return (
     <ImageBackground source={{ uri: bgImage }} style={styles.container}>
       <View
@@ -116,10 +136,7 @@ export default function HomeScreen() {
 
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View
-        lightColor="light"
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-      >
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <LottieView
           source={
             weather.weather[0].main === 'Rain'
@@ -133,28 +150,63 @@ export default function HomeScreen() {
           loop
           autoPlay
         />
-        <Text style={styles.location}>{weather.name}</Text>
-        <Text style={styles.temp}>{Math.round(weather.main.temp)}°</Text>
-        <Text style={styles.location}>{weather.weather[0].main}</Text>
       </View>
 
-      <FlatList
-        data={forecast}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={{
-          flexGrow: 0,
-          height: 150,
-          marginBottom: 40,
-        }}
-        contentContainerStyle={{
-          gap: 10,
-          paddingHorizontal: 10,
-        }}
-        renderItem={({ item }) => <ForecastItem forecast={item} />}
-      />
-
       <StatusBar style="light" />
+      <BottomSheet
+        style={styles.bottomSheetContainer}
+        index={1}
+        snapPoints={snapPoints}
+        backgroundStyle={{
+          backgroundColor: 'black',
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: 'darkgray',
+        }}
+      >
+        <View
+          style={{
+            flex: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row',
+            paddingBottom: 50,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'center',
+            }}
+          >
+            <Text style={styles.temp}>{Math.round(weather.main.temp)}°</Text>
+          </View>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={styles.location}>{weather.name}</Text>
+            <Text style={styles.country}>{setCountryName()}</Text>
+          </View>
+        </View>
+
+        <View style={styles.contentContainer}>
+          <FlatList
+            data={forecast}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{
+              flexGrow: 0,
+              height: 150,
+              marginBottom: 40,
+            }}
+            contentContainerStyle={{
+              gap: 10,
+              paddingHorizontal: 10,
+            }}
+            renderItem={({ item }) => <ForecastItem forecast={item} />}
+          />
+        </View>
+      </BottomSheet>
     </ImageBackground>
   );
 }
@@ -166,14 +218,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   location: {
+    fontFamily: 'InterBlack',
+    fontSize: 30,
+    color: 'lightgray',
+    marginHorizontal: 0,
+    marginTop: 0,
+    padding: 0,
+  },
+  country: {
+    fontFamily: 'Inter',
+    fontSize: 20,
+    color: 'lightgray',
+  },
+  main: {
     fontFamily: 'Inter',
     fontSize: 30,
     color: 'lightgray',
   },
   temp: {
-    fontFamily: 'InterBlack',
-    fontSize: 150,
-    color: '#FEFEFE',
+    fontFamily: 'Inter',
+    fontSize: 70,
+    color: 'orange',
+    marginHorizontal: 0,
+    marginTop: 0,
+    paddingRight: 5,
   },
   link: {
     marginTop: 15,
@@ -182,5 +250,20 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 14,
     color: '#2e78b7',
+  },
+  contentContainer: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  bottomSheetContainer: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  containerHeadline: {
+    fontSize: 24,
+    fontWeight: '600',
+    padding: 20,
   },
 });
