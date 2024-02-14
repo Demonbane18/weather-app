@@ -5,14 +5,19 @@ import {
   ActivityIndicator,
   StyleSheet,
   ImageBackground,
+  Image,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { FlatList } from 'react-native-gesture-handler';
 import ForecastItem from '@/components/ForecastItem';
+import DataItem from '@/components/DataItem';
 import { Stack } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import { StatusBar } from 'expo-status-bar';
-import BottomSheet from '@gorhom/bottom-sheet';
+import BottomSheet, {
+  BottomSheetView,
+  BottomSheetFlatList,
+} from '@gorhom/bottom-sheet';
 
 const BASE_URL = `https://api.openweathermap.org/data/2.5`;
 const OPEN_WEATHER_KEY = process.env.EXPO_PUBLIC_OPEN_WEATHER_KEY;
@@ -38,6 +43,16 @@ type Weather = {
   name: string;
   main: MainWeather;
   sys: Sys;
+  clouds: [
+    {
+      all: string;
+    }
+  ];
+  rain: [
+    {
+      '1h': number;
+    }
+  ];
   weather: [
     {
       id: string;
@@ -51,6 +66,21 @@ type Weather = {
 export type WeatherForecast = {
   main: MainWeather;
   dt: number;
+  pop: number;
+  weather: [
+    {
+      id: string;
+      main: string;
+      description: string;
+      icon: string;
+    }
+  ];
+};
+export type WeatherInfo = {
+  data_type: string;
+  data_value: string;
+  data_unit: string;
+  description: string;
 };
 
 export default function HomeScreen() {
@@ -60,6 +90,7 @@ export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject>();
   const [errorMsg, setErrorMsg] = useState('');
   const [weather, setWeather] = useState<Weather>();
+  const [weatherInfo, setWeatherInfo] = useState<WeatherInfo[]>();
   const [forecast, setForecast] = useState<WeatherForecast[]>();
   const [snapPoint, setSnapPoint] = useState<Number>();
   const [loading, setLoading] = useState<boolean>();
@@ -68,6 +99,7 @@ export default function HomeScreen() {
     if (location) {
       fetchWeather();
       fetchForecast();
+      fetchWeatherInfo();
     }
   }, [location]);
 
@@ -80,7 +112,7 @@ export default function HomeScreen() {
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      console.log('Location:', location);
+      // console.log('Location:', location);
       setLocation(location);
     })();
   }, []);
@@ -89,12 +121,11 @@ export default function HomeScreen() {
     if (!location) {
       return;
     }
-    const unit = 'metric';
     const results = await fetch(
       `${BASE_URL}/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=${unit}&appid=${OPEN_WEATHER_KEY}`
     );
     const data = await results.json();
-    console.log(JSON.stringify(data, null, 2));
+    // console.log(JSON.stringify(data, null, 2));
     setWeather(data);
   };
 
@@ -110,6 +141,57 @@ export default function HomeScreen() {
     const data = await results.json();
     // console.log(JSON.stringify(data, null, 2));
     setForecast(data.list);
+  };
+
+  const fetchWeatherInfo = async () => {
+    if (!location) {
+      return;
+    }
+    const results = await fetch(
+      `${BASE_URL}/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=${unit}&appid=${OPEN_WEATHER_KEY}`
+    );
+    const data = await results.json();
+
+    // console.log('Humidity: ', JSON.stringify(data.main.humidity));
+    // console.log('Pressure: ', JSON.stringify(data.main.pressure));
+    const raining = data?.rain?.['1h'] ? data?.rain?.['1h'] : 0;
+    //can only get rain data when its raining....
+    // console.log('Precipitation: ', JSON.stringify(raining));
+    // console.log('Wind: ', JSON.stringify(data.wind.speed));
+    // console.log('Cloudiness: ', JSON.stringify(data.clouds.all));
+    const weatherInfo = [
+      {
+        data_type: 'humidity',
+        data_value: data.main.humidity,
+        data_unit: '%',
+        description: 'Humidity now',
+      },
+      {
+        data_type: 'pressure',
+        data_value: data.main.pressure,
+        data_unit: 'hPa',
+        description: 'Pressure now',
+      },
+      {
+        data_type: 'precipitation',
+        data_value: raining,
+        data_unit: 'mm/h',
+        description: raining == 0 ? 'No Precipitation' : 'Raining now',
+      },
+      {
+        data_type: 'wind',
+        data_value: data.wind.speed,
+        data_unit: unit === 'metric' ? 'm/s' : 'mph',
+        description: 'Wind Speed now',
+      },
+      {
+        data_type: 'cloud',
+        data_value: data.clouds.all,
+        data_unit: '%',
+        description: 'Cloudiness now',
+      },
+    ];
+    setWeatherInfo(weatherInfo);
   };
 
   function setCountryName() {
@@ -177,7 +259,7 @@ export default function HomeScreen() {
         }}
       >
         {snapPoint === 0 ? (
-          <View
+          <BottomSheetView
             style={{
               flex: 0,
               alignItems: 'center',
@@ -186,7 +268,7 @@ export default function HomeScreen() {
               paddingBottom: 50,
             }}
           >
-            <View
+            <BottomSheetView
               style={{
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -194,46 +276,134 @@ export default function HomeScreen() {
                 alignSelf: 'center',
               }}
             >
-              <Text style={styles.temp}>
-                {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}
-              </Text>
-            </View>
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'flex-start',
+                }}
+              >
+                <Text style={styles.temp}>{Math.round(weather.main.temp)}</Text>
+                <Text style={styles.tempUnit}>
+                  °{unit === 'metric' ? 'C' : 'F'}
+                </Text>
+              </View>
+            </BottomSheetView>
+            <View
+              style={{
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                marginHorizontal: 10,
+              }}
+            >
               <Text style={styles.location}>{weather.name}</Text>
               <Text style={styles.country}>{setCountryName()}</Text>
             </View>
-          </View>
+          </BottomSheetView>
         ) : (
-          <View
+          <BottomSheetView
             style={{
               flex: 0,
               alignItems: 'center',
               justifyContent: 'center',
-              flexDirection: 'row',
+              flexDirection: 'column',
               paddingBottom: 50,
             }}
           >
-            <View
+            <BottomSheetView
               style={{
-                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+              }}
+            >
+              <Text style={styles.bottomLocation}>{weather.name}, </Text>
+              <Text style={styles.bottomCountry}>{setCountryName()}</Text>
+            </BottomSheetView>
+            <BottomSheetView
+              style={{
+                flexDirection: 'row',
                 justifyContent: 'center',
                 alignItems: 'center',
                 alignSelf: 'center',
               }}
             >
-              <Text style={styles.temp}>
-                {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}
+              <Text style={styles.bottomTemp}>
+                {Math.round(weather.main.temp)}
               </Text>
-            </View>
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={styles.location}>{weather.name}</Text>
-              <Text style={styles.country}>{setCountryName()}</Text>
-              <Text style={styles.location}>tets</Text>
-            </View>
-          </View>
-        )}
+              <BottomSheetView
+                style={{
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  alignItems: 'flex-start',
+                  alignSelf: 'center',
+                }}
+              >
+                <Text style={styles.bottomTempUnit}>
+                  {' '}
+                  °{unit === 'metric' ? 'C' : 'F'}
+                </Text>
+                <Text style={styles.bottomFeelsLike}>feels like</Text>
+                <Text style={styles.bottomFeelsLike}>
+                  {Math.round(weather.main.feels_like)} °
+                  {unit === 'metric' ? 'C' : 'F'}
+                </Text>
+              </BottomSheetView>
 
-        <View style={styles.contentContainer}>
+              <Image
+                style={styles.currentWeatherIcon}
+                src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+              />
+            </BottomSheetView>
+            <BottomSheetView
+              style={{
+                flexDirection: 'column',
+                justifyContent: 'flex-start',
+                alignItems: 'flex-start',
+                alignSelf: 'flex-start',
+                marginLeft: 40,
+              }}
+            >
+              <Text style={styles.description}>
+                {weather.weather[0].description}
+              </Text>
+              <BottomSheetView
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'flex-start',
+                  alignItems: 'flex-start',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <Text style={styles.temp_max}>
+                  Max {Math.round(weather.main.temp_max)}°
+                </Text>
+                <Text style={styles.temp_min}>
+                  Min {Math.round(weather.main.temp_min)}°
+                </Text>
+              </BottomSheetView>
+            </BottomSheetView>
+          </BottomSheetView>
+        )}
+        <BottomSheetView style={styles.contentContainer}>
+          <FlatList
+            data={weatherInfo}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{
+              flexGrow: 0,
+              height: 100,
+              marginBottom: 40,
+            }}
+            contentContainerStyle={{
+              gap: 10,
+              paddingHorizontal: 10,
+            }}
+            renderItem={({ item }) => <DataItem weatherInfo={item} />}
+          />
+        </BottomSheetView>
+        <Text style={styles.header}>5 Day Forecast</Text>
+        <BottomSheetView style={styles.contentContainer}>
           <FlatList
             data={forecast}
             horizontal
@@ -249,7 +419,7 @@ export default function HomeScreen() {
             }}
             renderItem={({ item }) => <ForecastItem forecast={item} />}
           />
-        </View>
+        </BottomSheetView>
       </BottomSheet>
     </ImageBackground>
   );
@@ -261,9 +431,49 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     alignItems: 'center',
   },
+  header: {
+    fontFamily: 'InterSemi',
+    fontSize: 30,
+    color: 'lightgray',
+    marginHorizontal: 10,
+    marginVertical: 10,
+    alignContent: 'flex-start',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    padding: 0,
+  },
   location: {
     fontFamily: 'InterBlack',
     fontSize: 30,
+    color: 'lightgray',
+    marginHorizontal: 0,
+    marginTop: 0,
+    padding: 0,
+  },
+  description: {
+    fontFamily: 'Inter',
+    fontSize: 25,
+    color: 'ghostwhite',
+  },
+  bottomLocation: {
+    fontFamily: 'InterSemi',
+    fontSize: 20,
+    color: 'ghostwhite',
+    marginHorizontal: 0,
+    marginTop: 0,
+    padding: 0,
+  },
+  bottomTempUnit: {
+    fontFamily: 'InterSemi',
+    fontSize: 30,
+    color: 'ghostwhite',
+    marginHorizontal: 0,
+    marginTop: 0,
+    padding: 0,
+  },
+  bottomFeelsLike: {
+    fontFamily: 'Inter',
+    fontSize: 15,
     color: 'lightgray',
     marginHorizontal: 0,
     marginTop: 0,
@@ -273,6 +483,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontSize: 20,
     color: 'lightgray',
+  },
+  bottomCountry: {
+    fontFamily: 'InterSemi',
+    fontSize: 20,
+    color: 'ghostwhite',
   },
   main: {
     fontFamily: 'Inter',
@@ -286,6 +501,38 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
     marginTop: 0,
     paddingRight: 5,
+  },
+  tempUnit: {
+    fontFamily: 'InterSemi',
+    fontSize: 30,
+    color: 'orange',
+    marginHorizontal: 0,
+    marginTop: 0,
+    padding: 0,
+  },
+  temp_max: {
+    fontFamily: 'Inter',
+    fontSize: 25,
+    color: 'ghostwhite',
+    marginRight: 20,
+  },
+  temp_min: {
+    fontFamily: 'Inter',
+    fontSize: 25,
+    color: 'ghostwhite',
+  },
+  bottomTemp: {
+    fontFamily: 'Inter',
+    fontSize: 90,
+    color: 'ghostwhite',
+    marginHorizontal: 0,
+    marginTop: 0,
+    paddingRight: 5,
+  },
+  currentWeatherIcon: {
+    width: 150,
+    height: 150,
+    resizeMode: 'contain',
   },
   link: {
     marginTop: 15,

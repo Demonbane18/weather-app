@@ -11,6 +11,7 @@ NowCast Screen (modal)
     ✔ display 3 hour forecast @done (2/12/2024, 11:11:40 AM)
     ☐ display cloud cover, humidity, air pressure, rate of rainfall
     ☐ add searchbar to find city and give data (optional)
+    ☐ Activity indicator for bottom sheet
 Map screen
 ☐ Cloud cover map
 ☐ Precipitation map
