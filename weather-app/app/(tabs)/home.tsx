@@ -14,6 +14,7 @@ import DataItem from '@/components/DataItem';
 import { Stack } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomSheet, {
   BottomSheetView,
   BottomSheetFlatList,
@@ -23,7 +24,6 @@ const BASE_URL = `https://api.openweathermap.org/data/2.5`;
 const OPEN_WEATHER_KEY = process.env.EXPO_PUBLIC_OPEN_WEATHER_KEY;
 const bgImage =
   'https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-images/1.jpg';
-const unit = 'metric';
 
 export type MainWeather = {
   temp: number;
@@ -94,12 +94,26 @@ export default function HomeScreen() {
   const [forecast, setForecast] = useState<WeatherForecast[]>();
   const [snapPoint, setSnapPoint] = useState<Number>();
   const [loading, setLoading] = useState<boolean>();
+  const [units, setUnits] = useState<string>('metric');
 
+  useEffect(() => {
+    //Implementing the setInterval method
+    const interval = setInterval(() => {
+      getData();
+      fetchWeather();
+      fetchForecast();
+      fetchWeatherInfo();
+    }, 5000);
+
+    //Clearing the interval
+    return () => clearInterval(interval);
+  }, [units, weather, forecast, weatherInfo]);
   useEffect(() => {
     if (location) {
       fetchWeather();
       fetchForecast();
       fetchWeatherInfo();
+      getData();
     }
   }, [location]);
 
@@ -112,20 +126,32 @@ export default function HomeScreen() {
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      // console.log('Location:', location);
+      console.log('Location:', location);
       setLocation(location);
     })();
   }, []);
+  const getData = async () => {
+    try {
+      const units = await AsyncStorage.getItem('units');
+      console.log('HomeUnit: ', units);
+      if (units !== null) {
+        // value previously stored
+        setUnits(units);
+      }
+    } catch (e) {
+      // error reading value
+    }
+  };
 
   const fetchWeather = async () => {
     if (!location) {
       return;
     }
     const results = await fetch(
-      `${BASE_URL}/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=${unit}&appid=${OPEN_WEATHER_KEY}`
+      `${BASE_URL}/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=${units}&appid=${OPEN_WEATHER_KEY}`
     );
     const data = await results.json();
-    // console.log(JSON.stringify(data, null, 2));
+    console.log(JSON.stringify(data.main.temp));
     setWeather(data);
   };
 
@@ -136,7 +162,7 @@ export default function HomeScreen() {
     }
 
     const results = await fetch(
-      `${BASE_URL}/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&appid=${OPEN_WEATHER_KEY}&units=${unit}`
+      `${BASE_URL}/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&appid=${OPEN_WEATHER_KEY}&units=${units}`
     );
     const data = await results.json();
     // console.log(JSON.stringify(data, null, 2));
@@ -148,7 +174,7 @@ export default function HomeScreen() {
       return;
     }
     const results = await fetch(
-      `${BASE_URL}/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=${unit}&appid=${OPEN_WEATHER_KEY}`
+      `${BASE_URL}/weather?lat=${location.coords.latitude}&lon=${location.coords.longitude}&units=${units}&appid=${OPEN_WEATHER_KEY}`
     );
     const data = await results.json();
 
@@ -181,7 +207,7 @@ export default function HomeScreen() {
       {
         data_type: 'wind',
         data_value: data.wind.speed,
-        data_unit: unit === 'metric' ? 'm/s' : 'mph',
+        data_unit: units === 'metric' ? 'm/s' : 'mph',
         description: 'Wind Speed now',
       },
       {
@@ -210,9 +236,11 @@ export default function HomeScreen() {
   // callbacks
   const handleSheetChanges = useCallback((index: number) => {
     console.log('handleSheetChanges', index);
-    setLoading(true);
+    getData();
+    fetchWeather();
+    fetchWeatherInfo();
+    fetchForecast();
     setSnapPoint(index);
-    setLoading(false);
   }, []);
 
   if (!weather) {
@@ -285,7 +313,7 @@ export default function HomeScreen() {
               >
                 <Text style={styles.temp}>{Math.round(weather.main.temp)}</Text>
                 <Text style={styles.tempUnit}>
-                  °{unit === 'metric' ? 'C' : 'F'}
+                  °{units === 'metric' ? 'C' : 'F'}
                 </Text>
               </View>
             </BottomSheetView>
@@ -341,12 +369,12 @@ export default function HomeScreen() {
               >
                 <Text style={styles.bottomTempUnit}>
                   {' '}
-                  °{unit === 'metric' ? 'C' : 'F'}
+                  °{units === 'metric' ? 'C' : 'F'}
                 </Text>
                 <Text style={styles.bottomFeelsLike}>feels like</Text>
                 <Text style={styles.bottomFeelsLike}>
                   {Math.round(weather.main.feels_like)} °
-                  {unit === 'metric' ? 'C' : 'F'}
+                  {units === 'metric' ? 'C' : 'F'}
                 </Text>
               </BottomSheetView>
 

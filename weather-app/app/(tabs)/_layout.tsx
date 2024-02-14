@@ -63,15 +63,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="nowcast"
-        options={{
-          title: '',
-          tabBarIcon: ({ color }) => (
-            <EntypoBarIcon name="location" color={color} />
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="map"
         options={{
