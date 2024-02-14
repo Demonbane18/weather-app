@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import {
   Text,
   View,
@@ -18,6 +18,7 @@ const BASE_URL = `https://api.openweathermap.org/data/2.5`;
 const OPEN_WEATHER_KEY = process.env.EXPO_PUBLIC_OPEN_WEATHER_KEY;
 const bgImage =
   'https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-images/1.jpg';
+const unit = 'metric';
 
 type MainWeather = {
   temp: number;
@@ -53,11 +54,15 @@ export type WeatherForecast = {
 };
 
 export default function HomeScreen() {
+  // ref
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['20%', '95%'], []);
   const [location, setLocation] = useState<Location.LocationObject>();
   const [errorMsg, setErrorMsg] = useState('');
   const [weather, setWeather] = useState<Weather>();
   const [forecast, setForecast] = useState<WeatherForecast[]>();
+  const [snapPoint, setSnapPoint] = useState<Number>();
+  const [loading, setLoading] = useState<boolean>();
 
   useEffect(() => {
     if (location) {
@@ -95,7 +100,6 @@ export default function HomeScreen() {
 
   const fetchForecast = async () => {
     // api.openweathermap.org/data/2.5/forecast?lat=44.34&lon=10.99&appid={API key}
-    const unit = 'metric';
     if (!location) {
       return;
     }
@@ -121,10 +125,17 @@ export default function HomeScreen() {
     }
   }
 
+  // callbacks
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log('handleSheetChanges', index);
+    setLoading(true);
+    setSnapPoint(index);
+    setLoading(false);
+  }, []);
+
   if (!weather) {
     return <ActivityIndicator />;
   }
-
   return (
     <ImageBackground source={{ uri: bgImage }} style={styles.container}>
       <View
@@ -155,8 +166,9 @@ export default function HomeScreen() {
       <StatusBar style="light" />
       <BottomSheet
         style={styles.bottomSheetContainer}
-        index={1}
+        index={0}
         snapPoints={snapPoints}
+        onChange={handleSheetChanges}
         backgroundStyle={{
           backgroundColor: 'black',
         }}
@@ -164,30 +176,62 @@ export default function HomeScreen() {
           backgroundColor: 'darkgray',
         }}
       >
-        <View
-          style={{
-            flex: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            paddingBottom: 50,
-          }}
-        >
+        {snapPoint === 0 ? (
           <View
             style={{
-              flexDirection: 'column',
-              justifyContent: 'center',
+              flex: 0,
               alignItems: 'center',
-              alignSelf: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              paddingBottom: 50,
             }}
           >
-            <Text style={styles.temp}>{Math.round(weather.main.temp)}°</Text>
+            <View
+              style={{
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+              }}
+            >
+              <Text style={styles.temp}>
+                {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={styles.location}>{weather.name}</Text>
+              <Text style={styles.country}>{setCountryName()}</Text>
+            </View>
           </View>
-          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={styles.location}>{weather.name}</Text>
-            <Text style={styles.country}>{setCountryName()}</Text>
+        ) : (
+          <View
+            style={{
+              flex: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              paddingBottom: 50,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+              }}
+            >
+              <Text style={styles.temp}>
+                {Math.round(weather.main.temp)}°{unit === 'metric' ? 'C' : 'F'}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={styles.location}>{weather.name}</Text>
+              <Text style={styles.country}>{setCountryName()}</Text>
+              <Text style={styles.location}>tets</Text>
+            </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.contentContainer}>
           <FlatList
@@ -237,7 +281,7 @@ const styles = StyleSheet.create({
   },
   temp: {
     fontFamily: 'Inter',
-    fontSize: 70,
+    fontSize: 60,
     color: 'orange',
     marginHorizontal: 0,
     marginTop: 0,
