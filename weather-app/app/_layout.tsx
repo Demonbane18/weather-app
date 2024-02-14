@@ -94,6 +94,17 @@ function RootLayoutNav() {
           <Stack screenOptions={{}}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Humidity" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="Precipitation"
+              options={{ presentation: 'modal' }}
+            />
+            <Stack.Screen name="Pressure" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Wind" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="Cloudiness"
+              options={{ presentation: 'modal' }}
+            />
           </Stack>
         </ThemeProvider>
       </Animated.View>

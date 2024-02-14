@@ -25,7 +25,7 @@ const bgImage =
   'https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-images/1.jpg';
 const unit = 'metric';
 
-type MainWeather = {
+export type MainWeather = {
   temp: number;
   feels_like: number;
   temp_min: number;
@@ -39,7 +39,7 @@ type Sys = {
   country: string;
 };
 
-type Weather = {
+export type Weather = {
   name: string;
   main: MainWeather;
   sys: Sys;

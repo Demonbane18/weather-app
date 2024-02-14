@@ -30,15 +30,15 @@ const DataItem = ({ weatherInfo }: { weatherInfo: WeatherInfo }) => {
   }
   function goToScreen(data_type: string) {
     if (data_type === 'humidity') {
-      router.replace('/Humidity');
+      router.navigate('/Humidity');
     } else if (data_type === 'pressure') {
-      router.replace('/Pressure');
+      router.navigate('/Pressure');
     } else if (data_type === 'wind') {
-      router.replace('/Wind');
+      router.navigate('/Wind');
     } else if (data_type === 'precipitation') {
-      router.replace('/Precipitation');
+      router.navigate('/Precipitation');
     } else if (data_type === 'cloud') {
-      router.replace('/Cloudiness');
+      router.navigate('/Cloudiness');
     }
   }
 
@@ -55,25 +55,23 @@ const DataItem = ({ weatherInfo }: { weatherInfo: WeatherInfo }) => {
           goToScreen(weatherInfo.data_type);
         }}
       >
-        <Link href={'/Humidity'}>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-            }}
-          >
-            <Image
-              style={styles.infoImage}
-              source={fetchImage(weatherInfo.data_type)}
-            />
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+          }}
+        >
+          <Image
+            style={styles.infoImage}
+            source={fetchImage(weatherInfo.data_type)}
+          />
 
-            <Text style={styles.date}>
-              {weatherInfo.data_value} {weatherInfo.data_unit}
-            </Text>
-          </View>
-          <Text style={styles.date}>{weatherInfo.description}</Text>
-          <Text style={styles.arrow}>{'>'}</Text>
-        </Link>
+          <Text style={styles.date}>
+            {weatherInfo.data_value} {weatherInfo.data_unit}
+          </Text>
+        </View>
+        <Text style={styles.date}>{weatherInfo.description}</Text>
+        <Text style={styles.arrow}>{'>'}</Text>
       </TouchableWithoutFeedback>
     </BlurView>
   );
