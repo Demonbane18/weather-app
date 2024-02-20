@@ -1,9 +1,16 @@
-import { Switch, View, Text, SafeAreaView, StyleSheet } from 'react-native';
+import {
+  Switch,
+  View,
+  Text,
+  Image,
+  SafeAreaView,
+  StyleSheet,
+} from 'react-native';
 import React, { useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function SettingsScreen() {
   const [switchValue, setSwitchValue] = useState<boolean>(false);
-
+  const baseUrl = `https://tile.openweathermap.org/map/clouds_new/10/856/469.png?appid=6be4c73603d24111b5b1a6972d8bd56d`;
   const toggleSwitch = async (value: boolean) => {
     try {
       await AsyncStorage.setItem('units', value ? 'imperial' : 'metric');
@@ -41,6 +48,12 @@ export default function SettingsScreen() {
           value={switchValue}
         />
       </View>
+      <Image
+        style={styles.currentWeatherMap}
+        source={{
+          uri: baseUrl,
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -72,6 +85,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     justifyContent: 'center',
     color: 'ghostwhite',
+  },
+  currentWeatherMap: {
+    width: '100%',
+    height: '95%',
+    resizeMode: 'contain',
+    opacity: 0.5,
   },
   currentWeatherIcon: {
     width: 350,
