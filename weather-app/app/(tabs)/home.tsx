@@ -21,6 +21,7 @@ import BottomSheet, {
 } from '@gorhom/bottom-sheet';
 
 const BASE_URL = `https://api.openweathermap.org/data/2.5`;
+const PRO_URL = `https://pro.openweathermap.org/data/2.5`;
 const OPEN_WEATHER_KEY = process.env.EXPO_PUBLIC_OPEN_WEATHER_KEY;
 const bgImage =
   'https://notjustdev-dummy.s3.us-east-2.amazonaws.com/vertical-images/1.jpg';
@@ -156,13 +157,12 @@ export default function HomeScreen() {
   };
 
   const fetchForecast = async () => {
-    // api.openweathermap.org/data/2.5/forecast?lat=44.34&lon=10.99&appid={API key}
     if (!location) {
       return;
     }
 
     const results = await fetch(
-      `${BASE_URL}/forecast?lat=${location.coords.latitude}&lon=${location.coords.longitude}&appid=${OPEN_WEATHER_KEY}&units=${units}`
+      `${PRO_URL}/forecast/hourly?lat=${location.coords.latitude}&lon=${location.coords.longitude}&appid=${OPEN_WEATHER_KEY}&units=${units}`
     );
     const data = await results.json();
     // console.log(JSON.stringify(data, null, 2));

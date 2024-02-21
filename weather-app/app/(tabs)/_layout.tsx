@@ -45,7 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: '',
+          title: 'Home',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
           headerRight: () => (
             <Link href="/modal" asChild>
@@ -67,7 +67,16 @@ export default function TabLayout() {
       <Tabs.Screen
         name="map"
         options={{
-          title: '',
+          title: 'Map',
+          tabBarIcon: ({ color }) => (
+            <Entypo name="map" size={25} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="weather_map"
+        options={{
+          title: 'Weather',
           tabBarIcon: ({ color }) => (
             <AntDesignIcon name="clockcircle" color={color} />
           ),
@@ -76,7 +85,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: '',
+          title: 'Settings',
           tabBarIcon: ({ color }) => <TabBarIcon name="gear" color={color} />,
         }}
       />

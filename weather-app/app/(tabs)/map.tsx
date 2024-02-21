@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import { StyleSheet, View, Image, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import latLngToTile from '@/assets/functions/tileconverter';
@@ -19,7 +19,6 @@ export default function MapScreen() {
     y: 469,
     z: 10,
   });
-  const [layer, setLayer] = useState<string>('clouds_new');
 
   const userLocation = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -36,15 +35,15 @@ export default function MapScreen() {
     });
     const latitude = location.coords.latitude;
     const longitude = location.coords.longitude;
-    const zoomLevel = 10;
-    const tileCoords = latLngToTile({ latitude, longitude }, zoomLevel);
+    const zoomLevel = 12;
+    const tileCoordinates = latLngToTile({ latitude, longitude }, zoomLevel);
     setTileCoords({
-      x: tileCoords.x,
-      y: tileCoords.y,
+      x: tileCoordinates.x,
+      y: tileCoordinates.y,
       z: zoomLevel,
     });
     console.log(location.coords.latitude, location.coords.longitude);
-    console.log(tileCoords.x, tileCoords.y, tileCoords.z);
+    console.log(tileCoordinates.x, tileCoordinates.y, tileCoordinates.z);
   };
   useEffect(() => {
     userLocation();
@@ -63,12 +62,6 @@ export default function MapScreen() {
         />
       </TouchableOpacity>
       <Text style={styles.description}>test</Text>
-      <Image
-        // style={styles.currentWeatherMap}
-        source={{
-          uri: `https://tile.openweathermap.org/map/${layer}/${tileCoords.z}/${tileCoords.x}/${tileCoords.y}.png?appid=${process.env.EXPO_PUBLIC_OPEN_WEATHER_KEY}`,
-        }}
-      />
     </View>
   );
 }
