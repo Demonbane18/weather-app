@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import WebView, { WebViewMessageEvent } from 'react-native-webview';
 import { PermissionsAndroid } from 'react-native';
-
+import * as Location from 'expo-location';
 type Props = {
   //   onInitialized: (zoomToGeoJSONFunc: () => void) => void;
   onMapPress: (coordinates: [number, number]) => void;
@@ -11,7 +11,7 @@ type Props = {
 
 const Map = (props: Props) => {
   const { onMapPress } = props;
-
+  const [errorMsg, setErrorMsg] = useState('');
   const [assets] = useAssets([require('../assets/index.html')]);
   const [htmlString, setHtmlString] = useState<string>();
 
@@ -24,6 +24,7 @@ const Map = (props: Props) => {
   //   };
 
   useEffect(() => {
+    userLocation();
     if (assets) {
       fetch(assets[0].localUri || '')
         .then((res) => res.text())
@@ -34,14 +35,14 @@ const Map = (props: Props) => {
     }
   }, [assets]);
 
-  PermissionsAndroid.request(
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-    {
-      title: 'Location Access Permission',
-      message: 'We would like to use your location',
-      buttonPositive: 'Okay',
+  const userLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      setErrorMsg('Permission to access location was denied');
+      return;
     }
-  );
+    let location = await Location.getCurrentPositionAsync({});
+  };
   const messageHandler = (e: WebViewMessageEvent) => {
     const coords = JSON.parse(e.nativeEvent.data) as [number, number];
     onMapPress(coords);
