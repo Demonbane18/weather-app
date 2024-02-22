@@ -1,13 +1,29 @@
+const application = {
+  name: 'Weather Maps',
+  version: '1.0',
+};
+
 const tomTom = {
   key: 'Tsgxuwl2a1qJMDhI3j5rZS9xzsG8UqGF',
-  // mapPadding: 40,
+  mapPadding: 40,
   map: null,
   popup: null,
-  // searchZoom: 11,
+  searchZoom: 11,
+};
+
+var messageBox = document.querySelector('.js-message-box');
+var messageBoxContent = document.querySelector('.tt-overlay-panel__content');
+var messageBoxClose = messageBox.querySelector('.js-message-box-close');
+
+var messages = {
+  permissionDenied:
+    'Permission denied. You can change your browser settings' +
+    'to allow usage of geolocation on this domain.',
+  notAvailable: 'Geolocation data provider not available.',
 };
 
 const openWeatherMap = {
-  appid: 'Tsgxuwl2a1qJMDhI3j5rZS9xzsG8UqGF',
+  appid: '6be4c73603d24111b5b1a6972d8bd56d',
   tileUrl:
     'https://tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid=6be4c73603d24111b5b1a6972d8bd56d',
   layer: '',
@@ -64,6 +80,12 @@ function appendLine(element, text, withoutBreak) {
   if (!withoutBreak) element.appendChild(document.createElement('BR'));
 }
 
+function centerAndZoom(response) {
+  const location = getLocation(response);
+  if (location != null)
+    tomTom.map.flyTo({ center: location.position, zoom: tomTom.searchZoom });
+}
+
 function clearLayer() {
   if (tomTom.map.getLayer(openWeatherMap.layerName))
     tomTom.map.removeLayer(openWeatherMap.layerName);
@@ -95,9 +117,28 @@ function clearPopup() {
   tomTom.popup = null;
 }
 
+function findLocation() {
+  if (!tomTom.map.loaded()) {
+    alert('Please try again later, map is still loading.');
+    return;
+  }
+
+  clearPopup();
+
+  const queryText = getValue(ids.html.location);
+
+  tt.services
+    .fuzzySearch({ key: tomTom.key, query: queryText })
+    .go()
+    .then(centerAndZoom)
+    .catch(function (error) {
+      alert('Could not find location (' + queryText + '). ' + error.message);
+    });
+}
+
 function formatText(response) {
   const weather = response.weather[0];
-  const tempUnits = openWeatherMap.units == 'imperial' ? 'F' : 'C';
+  const tempUnits = openWeatherMap.units == 'imperial' ? 'F' : 'F';
   const temp = Math.round(response.main.temp);
 
   const outerDiv = document.createElement('DIV');
@@ -168,16 +209,68 @@ function getValue(elementId) {
 }
 
 function init() {
-  const CENTER = { lng: 121.021569, lat: 14.59375 };
+  tt.setProductInfo(application.name, application.version);
+
   tomTom.map = tt
-    // .map({
-    //   key: tomTom.key,
-    //   container: ids.html.map,
-    //   center: CENTER,
-    //   zoom: 10,
-    //   dragPan: !window.isMobileOrTablet(),
-    // })
+    .map({
+      key: tomTom.key,
+      container: ids.html.map,
+      dragPan: !isMobileOrTablet(),
+    })
     .on('click', getCurrentWeatherData);
+}
+
+tomTom.map.addControl(new tt.FullscreenControl());
+
+// Create plugin instance
+var geolocateControl = new tt.GeolocateControl({
+  positionOptions: {
+    enableHighAccuracy: false,
+  },
+});
+
+bindEvents();
+
+// Handle case when domain permissions are already blocked
+handlePermissionDenied();
+
+tomTom.map.addControl(geolocateControl);
+
+function handlePermissionDenied() {
+  if ('permissions' in navigator) {
+    navigator.permissions
+      .query({ name: 'geolocation' })
+      .then(function (result) {
+        if (result.state === 'denied') {
+          displayErrorMessage(messages.permissionDenied);
+        }
+      });
+  }
+}
+
+function bindEvents() {
+  geolocateControl.on('error', handleError);
+  messageBoxClose.addEventListener('click', handleMessageBoxClose);
+}
+
+function handleMessageBoxClose() {
+  messageBox.setAttribute('hidden', true);
+}
+
+function displayErrorMessage(message) {
+  messageBoxContent.textContent = message;
+  messageBox.removeAttribute('hidden');
+}
+
+function handleError(error) {
+  switch (error.code) {
+    case error.PERMISSION_DENIED:
+      displayErrorMessage(messages.permissionDenied);
+      break;
+    case error.POSITION_UNAVAILABLE:
+    case error.TIMEOUT:
+      displayErrorMessage(messages.notAvailable);
+  }
 }
 
 function updateLayer(element) {

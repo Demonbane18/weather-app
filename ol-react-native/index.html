@@ -1,13 +1,23 @@
 <!DOCTYPE html>
-<html class="use-all-space">
+<html>
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta charset="UTF-8" />
-    <title>Weather Map</title>
+    <title>Weather Maps</title>
     <meta
       name="viewport"
       content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
     />
+
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://api.tomtom.com/maps-sdk-for-web/cdn/5.x/5.36.1/maps/maps.css"
+    />
+    <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.1/maps/maps-web.min.js"></script>
+
+    <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/5.x/5.36.1/services/services-web.min.js"></script>
+    <!-- <script type="text/javascript" src="currentWeatherData.js"></script> -->
     <link
       rel="stylesheet"
       type="text/css"
@@ -18,386 +28,528 @@
       type="text/css"
       href="./assets/ui-library/index.css"
     />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://api.tomtom.com/maps-sdk-for-web/cdn/plugins/SearchBox/3.2.0//SearchBox.css"
-    />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="./assets/ui-library/icons-css/poi.css"
-    />
+
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        min-width: 100%;
+        height: 100%;
+      }
+      #left,
+      #right {
+        height: 100vh;
+      }
+      #left {
+        float: left;
+        width: 200px;
+        overflow-y: auto;
+      }
+      #right {
+        margin-left: 200px;
+      }
+      #map {
+        width: 86vw;
+        height: 100vh;
+      }
+      #controls,
+      #summary {
+        padding: 5px;
+      }
+      input.text {
+        margin-bottom: 5px;
+      }
+      div.clear {
+        clear: both;
+      }
+      div.popup > img {
+        border: 1px solid gray;
+        vertical-align: middle;
+      }
+      div.popup > h3 {
+        display: inline;
+        vertical-align: middle;
+        margin-left: 5px;
+      }
+    </style>
+    <script type="text/javascript">
+      function isMobileOrTablet() {
+        var i,
+          a = !1;
+        return (
+          (i = navigator.userAgent || navigator.vendor || window.opera),
+          (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(
+            i
+          ) ||
+            /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(
+              i.substr(0, 4)
+            )) &&
+            (a = !0),
+          a
+        );
+      }
+      window.isMobileOrTablet = window.isMobileOrTablet || isMobileOrTablet;
+    </script>
   </head>
   <body>
-    <div class="map-view">
-      <div class="tt-side-panel">
-        <header class="tt-side-panel__header"></header>
-        <div class="tt-tabs js-tabs">
-          <div class="tt-tabs__panel">
-            <div class="js-results" hidden="hidden"></div>
-            <div class="js-results-loader" hidden="hidden">
-              <div class="loader-center"><span class="loader"></span></div>
-            </div>
-            <div class="tt-tabs__placeholder js-results-placeholder"></div>
-          </div>
-        </div>
-        <div id="left">
-          <div id="controls">
-            Weather Layer:<br />
-            <select onchange="updateLayer(this)">
-              <option value="">None</option>
-              <option value="clouds_new">Clouds</option>
-              <option value="precipitation_new">Precipitation</option>
-              <option value="pressure_new">Pressure</option>
-              <option value="wind_new">Wind</option>
-              <option value="temp_new">Temperature</option>
-            </select>
-            <br /><br />
-            Units:<br />
-            <input
-              type="radio"
-              name="units"
-              value="metric"
-              onchange="updateUnits(this)"
-            />
-            <label for="celsius">C</label><br />
-            <input
-              type="radio"
-              name="units"
-              value="imperial"
-              checked
-              onchange="updateUnits(this)"
-            />
-            <label for="fahrenheit">F</label><br />
-            <br /><br />
-          </div>
+    <div id="left">
+      <div id="controls">
+        Location:<br />
+        <input class="text" id="location" type="text" />
+        <br /><br />
+        Weather Layer:<br />
+        <select onchange="updateLayer(this)">
+          <option value="">None</option>
+          <option value="clouds_new">Clouds</option>
+          <option value="precipitation_new">Precipitation</option>
+          <option value="pressure_new">Pressure</option>
+          <option value="wind_new">Wind</option>
+          <option value="temp_new">Temperature</option>
+        </select>
+        <br /><br />
+        Units:<br />
+        <input
+          type="radio"
+          name="units"
+          value="metric"
+          onchange="updateUnits(this)"
+        />
+        <label for="celsius">C</label>
+        <input
+          type="radio"
+          name="units"
+          value="imperial"
+          checked
+          onchange="updateUnits(this)"
+        />
+        <label for="fahrenheit">F</label>
+        <br /><br />
+        <input type="button" value="Search" onclick="findLocation()" />
+      </div>
+    </div>
+    <div id="right">
+      <div id="map" class="map">
+        <div class="tt-overlay-panel -center js-message-box" hidden>
+          <button class="tt-overlay-panel__close js-message-box-close"></button>
+          <span class="tt-overlay-panel__content"></span>
         </div>
       </div>
-
-      <div id="map" class="full-map"></div>
     </div>
-    <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.1/maps/maps-web.min.js"></script>
-    <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.1/services/services-web.min.js"></script>
-    <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/plugins/SearchBox/3.2.0//SearchBox-web.js"></script>
-    <script type="text/javascript" src="./assets/js/search-marker.js"></script>
-    <script
-      type="text/javascript"
-      src="./assets/js/search-results-parser.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="./assets/js/search-markers-manager.js"
-    ></script>
-    <script type="text/javascript" src="./assets/js/info-hint.js"></script>
-    <script
-      type="text/javascript"
-      src="./assets/js/mobile-or-tablet.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="./assets/js/results-manager.js"
-    ></script>
-    <script type="text/javascript" src="./assets/js/side-panel.js"></script>
-    <script type="text/javascript" src="./assets/js/dom-helpers.js"></script>
-    <script type="text/javascript" src="./assets/js/formatters.js"></script>
-    <script src="currentWeatherData.js"></script>
-    <script>
-      tt.setProductInfo('Weather Maps', '1.0');
-      const CENTER = { lng: 121.021569, lat: 14.59375 };
-      var map = tt.map({
+    <div class="clear"></div>
+
+    <!-- <script type="text/javascript" src="weather.js"></script> -->
+    <script type="text/javascript">
+      const application = {
+        name: 'Weather Maps',
+        version: '1.0',
+      };
+
+      const tomTom = {
         key: 'Tsgxuwl2a1qJMDhI3j5rZS9xzsG8UqGF',
-        container: 'map',
-        center: CENTER,
-        zoom: 10,
-        dragPan: !window.isMobileOrTablet(),
+        mapPadding: 40,
+        map: null,
+        popup: null,
+        searchZoom: 11,
+      };
+
+      var messageBox = document.querySelector('.js-message-box');
+      var messageBoxContent = document.querySelector(
+        '.tt-overlay-panel__content'
+      );
+      var messageBoxClose = messageBox.querySelector('.js-message-box-close');
+
+      var messages = {
+        permissionDenied:
+          'Permission denied. You can change your browser settings' +
+          'to allow usage of geolocation on this domain.',
+        notAvailable: 'Geolocation data provider not available.',
+      };
+
+      const openWeatherMap = {
+        appid: '6be4c73603d24111b5b1a6972d8bd56d',
+        tileUrl:
+          'https://tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid=6be4c73603d24111b5b1a6972d8bd56d',
+        layer: '',
+        layerName: 'owm_layer',
+        sourceName: 'owm_source',
+        attribution: 'OpenWeatherMap.org',
+        units: 'imperial',
+        directions: [
+          'N',
+          'NNE',
+          'NE',
+          'ENE',
+          'E',
+          'ESE',
+          'SE',
+          'SSE',
+          'S',
+          'SSW',
+          'SW',
+          'WSW',
+          'W',
+          'WNW',
+          'NW',
+          'NNW',
+        ],
+        maxDegree: 360,
+      };
+
+      const ids = {
+        html: {
+          map: 'map',
+          location: 'location',
+          imperial: 'imperial',
+          metric: 'metric',
+        },
+      };
+
+      init();
+
+      function appendHeading(element, text) {
+        const h3 = document.createElement('H3');
+        h3.appendChild(document.createTextNode(text));
+        element.appendChild(h3);
+      }
+
+      function appendIcon(element, icon) {
+        const img = document.createElement('IMG');
+        img.src = 'http://openweathermap.org/img/wn/' + icon + '.png';
+        element.appendChild(img);
+      }
+
+      function appendLine(element, text, withoutBreak) {
+        element.appendChild(document.createTextNode(text));
+        if (!withoutBreak) element.appendChild(document.createElement('BR'));
+      }
+
+      function centerAndZoom(response) {
+        const location = getLocation(response);
+        if (location != null)
+          tomTom.map.flyTo({
+            center: location.position,
+            zoom: tomTom.searchZoom,
+          });
+      }
+
+      function clearLayer() {
+        if (tomTom.map.getLayer(openWeatherMap.layerName))
+          tomTom.map.removeLayer(openWeatherMap.layerName);
+
+        if (tomTom.map.getSource(openWeatherMap.sourceName))
+          tomTom.map.removeSource(openWeatherMap.sourceName);
+      }
+
+      function displayPopup(response, location) {
+        if (!tomTom.map.loaded()) return;
+
+        clearPopup();
+
+        if (
+          response.hasOwnProperty('cod') &&
+          response.hasOwnProperty('message')
+        ) {
+          alert('Error: ' + response.message);
+          return;
+        }
+
+        tomTom.popup = new tt.Popup({ maxWidth: 'none' })
+          .setLngLat(location)
+          .setDOMContent(formatText(response))
+          .addTo(tomTom.map);
+      }
+
+      function clearPopup() {
+        if (tomTom.popup == null) return;
+
+        tomTom.popup.remove();
+        tomTom.popup = null;
+      }
+
+      function findLocation() {
+        if (!tomTom.map.loaded()) {
+          alert('Please try again later, map is still loading.');
+          return;
+        }
+
+        clearPopup();
+
+        const queryText = getValue(ids.html.location);
+
+        tt.services
+          .fuzzySearch({ key: tomTom.key, query: queryText })
+          .go()
+          .then(centerAndZoom)
+          .catch(function (error) {
+            alert(
+              'Could not find location (' + queryText + '). ' + error.message
+            );
+          });
+      }
+
+      function formatText(response) {
+        const weather = response.weather[0];
+        const tempUnits = openWeatherMap.units == 'imperial' ? 'F' : 'F';
+        const temp = Math.round(response.main.temp);
+
+        const outerDiv = document.createElement('DIV');
+        outerDiv.classList.add('popup');
+
+        appendIcon(outerDiv, weather.icon);
+        appendHeading(outerDiv, getName(response));
+
+        const innerDiv = document.createElement('DIV');
+        outerDiv.appendChild(innerDiv);
+
+        appendLine(innerDiv, weather.description);
+        appendLine(innerDiv, 'Temperature: ' + temp + ' ' + tempUnits);
+        appendLine(innerDiv, 'Humidity: ' + response.main.humidity + '%');
+        appendLine(innerDiv, 'Wind Speed: ' + formatWind(response.wind), true);
+        return outerDiv;
+      }
+
+      function formatWind(wind) {
+        const units = openWeatherMap.units == 'imperial' ? 'mph' : 'km/h';
+        const speed = Math.round(wind.speed) + ' ' + units;
+        const direction = getDirection(wind.deg);
+        return direction == null ? speed : direction + ' ' + speed;
+      }
+
+      function getCurrentWeatherData(clickEvent) {
+        currentWeatherData({
+          appid: openWeatherMap.appid,
+          lat: clickEvent.lngLat.lat,
+          lon: clickEvent.lngLat.lng,
+          units: openWeatherMap.units,
+        })
+          .go()
+          .then(function (response) {
+            displayPopup(response, clickEvent.lngLat);
+          })
+          .catch(function (error) {
+            clearPopup();
+
+            const message = error.hasOwnProperty('message')
+              ? error.message
+              : error;
+            alert('Error: ' + message);
+          });
+      }
+
+      function getDirection(degrees) {
+        const increment =
+          openWeatherMap.maxDegree / openWeatherMap.directions.length;
+        return degrees >= 0 && degrees < openWeatherMap.maxDegree
+          ? openWeatherMap.directions[Math.floor(degrees / increment)]
+          : null;
+      }
+
+      function getLocation(response) {
+        if (response.results.length > 0) return response.results[0];
+
+        alert('Could not find location.');
+        return null;
+      }
+
+      function getName(response) {
+        const name = response.hasOwnProperty('name') ? response.name : '';
+        return name == null || name == ''
+          ? 'lat=' + response.coord.lat + ', lon=' + response.coord.lon
+          : name;
+      }
+
+      function getValue(elementId) {
+        return document.getElementById(elementId).value;
+      }
+
+      function init() {
+        tt.setProductInfo(application.name, application.version);
+
+        tomTom.map = tt
+          .map({
+            key: tomTom.key,
+            container: ids.html.map,
+            dragPan: !isMobileOrTablet(),
+          })
+          .on('click', getCurrentWeatherData);
+      }
+      tomTom.map.on('dragend', function () {
+        let center = map.getCenter();
+        window.ReactNativeWebView.postMessage(
+          center.lng.toFixed(3) + ', ' + center.lat.toFixed(3)
+        );
       });
 
-      var infoHint = new InfoHint('info', 'bottom-center', 5000).addTo(
-        document.getElementById('map')
-      );
-      var errorHint = new InfoHint('error', 'bottom-center', 5000).addTo(
-        document.getElementById('map')
-      );
+      tomTom.map.addControl(new tt.FullscreenControl());
 
-      // Options for the fuzzySearch service
-      var searchOptions = {
-        key: 'Tsgxuwl2a1qJMDhI3j5rZS9xzsG8UqGF',
-        language: 'en-GB',
-        limit: 5,
-      };
-
-      // Options for the autocomplete service
-      var autocompleteOptions = {
-        key: 'Tsgxuwl2a1qJMDhI3j5rZS9xzsG8UqGF',
-        language: 'en-GB',
-      };
-
-      var searchBoxOptions = {
-        minNumberOfCharacters: 0,
-        searchOptions: searchOptions,
-        autocompleteOptions: autocompleteOptions,
-        distanceFromPoint: [15.4, 53.0],
-      };
-      var ttSearchBox = new tt.plugins.SearchBox(tt.services, searchBoxOptions);
-      document
-        .querySelector('.tt-side-panel__header')
-        .appendChild(ttSearchBox.getSearchBoxHTML());
-
-      var state = {
-        previousOptions: {
-          query: null,
-          center: null,
-        },
-        callbackId: null,
-        userLocation: null,
-      };
-
-      map.addControl(
-        new tt.FullscreenControl({ container: document.querySelector('body') })
-      );
-      map.addControl(new tt.NavigationControl());
-      new SidePanel('.tt-side-panel', map);
-
+      // Create plugin instance
       var geolocateControl = new tt.GeolocateControl({
         positionOptions: {
           enableHighAccuracy: false,
         },
       });
 
-      geolocateControl.on('geolocate', function (event) {
-        var coordinates = event.coords;
-        state.userLocation = [coordinates.longitude, coordinates.latitude];
-        ttSearchBox.updateOptions(
-          Object.assign({}, ttSearchBox.getOptions(), {
-            distanceFromPoint: state.userLocation,
-          })
-        );
-      });
+      bindEvents();
 
-      map.addControl(geolocateControl);
+      // Handle case when domain permissions are already blocked
+      handlePermissionDenied();
 
-      var resultsManager = new ResultsManager();
-      var searchMarkersManager = new SearchMarkersManager(map);
+      tomTom.map.addControl(geolocateControl);
 
-      map.on('load', handleMapEvent);
-      map.on('moveend', handleMapEvent);
-
-      ttSearchBox.on('tomtom.searchbox.resultscleared', handleResultsCleared);
-      ttSearchBox.on('tomtom.searchbox.resultsfound', handleResultsFound);
-      ttSearchBox.on('tomtom.searchbox.resultfocused', handleResultSelection);
-      ttSearchBox.on('tomtom.searchbox.resultselected', handleResultSelection);
-
-      function handleMapEvent() {
-        // Update search options to provide geobiasing based on current map center
-        var oldSearchOptions = ttSearchBox.getOptions().searchOptions;
-        var oldautocompleteOptions =
-          ttSearchBox.getOptions().autocompleteOptions;
-        var newSearchOptions = Object.assign({}, oldSearchOptions, {
-          center: map.getCenter(),
-        });
-        var newAutocompleteOptions = Object.assign({}, oldautocompleteOptions, {
-          center: map.getCenter(),
-        });
-        ttSearchBox.updateOptions(
-          Object.assign({}, searchBoxOptions, {
-            placeholder: 'Query e.g. Washington',
-            searchOptions: newSearchOptions,
-            autocompleteOptions: newAutocompleteOptions,
-            distanceFromPoint: state.userLocation,
-          })
-        );
-      }
-
-      function handleResultsCleared() {
-        searchMarkersManager.clear();
-        resultsManager.clear();
-      }
-
-      function handleResultsFound(event) {
-        // Display fuzzySearch results if request was triggered by pressing enter
-        if (
-          event.data.results &&
-          event.data.results.fuzzySearch &&
-          event.data.metadata.triggeredBy === 'submit'
-        ) {
-          var results = event.data.results.fuzzySearch.results;
-
-          if (results.length === 0) {
-            handleNoResults();
-          }
-          searchMarkersManager.draw(results);
-          resultsManager.success();
-          fillResultsList(results);
-          fitToViewport(results);
-        }
-
-        if (event.data.errors) {
-          errorHint.setMessage('There was an error returned by the service.');
-        }
-      }
-
-      function handleResultSelection(event) {
-        if (isFuzzySearchResult(event)) {
-          // Display selected result on the map
-          var result = event.data.result;
-          resultsManager.success();
-          searchMarkersManager.draw([result]);
-          fillResultsList([result]);
-          searchMarkersManager.openPopup(result.id);
-          fitToViewport(result);
-          state.callbackId = null;
-          infoHint.hide();
-        } else if (stateChangedSinceLastCall(event)) {
-          var currentCallbackId = Math.random().toString(36).substring(2, 9);
-          state.callbackId = currentCallbackId;
-          // Make fuzzySearch call with selected autocomplete result as filter
-          handleFuzzyCallForSegment(event, currentCallbackId);
-        }
-      }
-
-      function isFuzzySearchResult(event) {
-        return !('matches' in event.data.result);
-      }
-
-      function stateChangedSinceLastCall(event) {
-        return (
-          Object.keys(searchMarkersManager.getMarkers()).length === 0 ||
-          !(
-            state.previousOptions.query === event.data.result.value &&
-            state.previousOptions.center.toString() ===
-              map.getCenter().toString()
-          )
-        );
-      }
-
-      function getBounds(data) {
-        var southWest;
-        var northEast;
-        if (data.viewport) {
-          southWest = [
-            data.viewport.topLeftPoint.lng,
-            data.viewport.btmRightPoint.lat,
-          ];
-          northEast = [
-            data.viewport.btmRightPoint.lng,
-            data.viewport.topLeftPoint.lat,
-          ];
-        }
-        return [southWest, northEast];
-      }
-
-      function fitToViewport(markerData) {
-        if (
-          !markerData ||
-          (markerData instanceof Array && !markerData.length)
-        ) {
-          return;
-        }
-        var bounds = new tt.LngLatBounds();
-        if (markerData instanceof Array) {
-          markerData.forEach(function (marker) {
-            bounds.extend(getBounds(marker));
-          });
-        } else {
-          bounds.extend(getBounds(markerData));
-        }
-        map.fitBounds(bounds, { padding: 100, linear: true });
-      }
-
-      function handleFuzzyCallForSegment(event, currentCallbackId) {
-        var query = ttSearchBox.getValue();
-        var segmentType = event.data.result.type;
-
-        var commonOptions = Object.assign({}, searchOptions, {
-          query: query,
-          limit: 15,
-          center: map.getCenter(),
-          typeahead: true,
-          language: 'en-GB',
-        });
-
-        var filter;
-        if (segmentType === 'category') {
-          filter = { categorySet: event.data.result.id };
-        }
-        if (segmentType === 'brand') {
-          filter = { brandSet: event.data.result.value };
-        }
-        var options = Object.assign({}, commonOptions, filter);
-
-        infoHint.setMessage('Loading results...');
-        errorHint.hide();
-        resultsManager.loading();
-        tt.services
-          .fuzzySearch(options)
-          .then(function (response) {
-            if (state.callbackId !== currentCallbackId) {
-              return;
-            }
-            if (response.results.length === 0) {
-              handleNoResults();
-              return;
-            }
-            resultsManager.success();
-            searchMarkersManager.draw(response.results);
-            fillResultsList(response.results);
-            map.once('moveend', function () {
-              state.previousOptions = {
-                query: query,
-                center: map.getCenter(),
-              };
+      function handlePermissionDenied() {
+        if ('permissions' in navigator) {
+          navigator.permissions
+            .query({ name: 'geolocation' })
+            .then(function (result) {
+              if (result.state === 'denied') {
+                displayErrorMessage(messages.permissionDenied);
+              }
             });
-            fitToViewport(response.results);
-          })
-          .catch(function (error) {
-            if (error.data && error.data.errorText) {
-              errorHint.setMessage(error.data.errorText);
-            }
-            resultsManager.resultsNotFound();
-          })
-          .finally(function () {
-            infoHint.hide();
-          });
+        }
       }
 
-      function handleNoResults() {
-        resultsManager.clear();
-        resultsManager.resultsNotFound();
-        searchMarkersManager.clear();
-        infoHint.setMessage(
-          'No results for "' +
-            ttSearchBox.getValue() +
-            '" found nearby. Try changing the viewport.'
-        );
+      function bindEvents() {
+        geolocateControl.on('error', handleError);
+        messageBoxClose.addEventListener('click', handleMessageBoxClose);
       }
 
-      function fillResultsList(results) {
-        resultsManager.clear();
-        var resultList = DomHelpers.createResultList();
-        results.forEach(function (result) {
-          var distance = state.userLocation
-            ? SearchResultsParser.getResultDistance(result)
-            : undefined;
-          var addressLines = SearchResultsParser.getAddressLines(result);
-          var searchResult = this.DomHelpers.createSearchResult(
-            addressLines[0],
-            addressLines[1],
-            distance ? Formatters.formatAsMetricDistance(distance) : ''
-          );
-          var resultItem = DomHelpers.createResultItem();
-          resultItem.appendChild(searchResult);
-          resultItem.setAttribute('data-id', result.id);
-          resultItem.onclick = function (event) {
-            var id = event.currentTarget.getAttribute('data-id');
-            searchMarkersManager.openPopup(id);
-            searchMarkersManager.jumpToMarker(id);
-          };
-          resultList.appendChild(resultItem);
+      function handleMessageBoxClose() {
+        messageBox.setAttribute('hidden', true);
+      }
+
+      function displayErrorMessage(message) {
+        messageBoxContent.textContent = message;
+        messageBox.removeAttribute('hidden');
+      }
+
+      function handleError(error) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            displayErrorMessage(messages.permissionDenied);
+            break;
+          case error.POSITION_UNAVAILABLE:
+          case error.TIMEOUT:
+            displayErrorMessage(messages.notAvailable);
+        }
+      }
+
+      function updateLayer(element) {
+        openWeatherMap.layer = element.options[element.selectedIndex].value;
+
+        if (!tomTom.map.loaded()) return;
+
+        clearLayer();
+        clearPopup();
+
+        const tileUrl = openWeatherMap.tileUrl
+          .replace('{layer}', openWeatherMap.layer)
+          .replace('{appid}', openWeatherMap.appid);
+
+        tomTom.map.addSource(openWeatherMap.sourceName, {
+          type: 'raster',
+          tiles: [tileUrl],
+          tileSize: 256,
+          minZoom: 0,
+          maxZoom: 12,
+          attribution: openWeatherMap.attribution,
         });
-        resultsManager.append(resultList);
+
+        tomTom.map.addLayer({
+          id: openWeatherMap.layerName,
+          type: 'raster',
+          source: openWeatherMap.sourceName,
+          layout: { visibility: 'visible' },
+        });
+      }
+
+      function updateUnits(element) {
+        openWeatherMap.units = element.value;
+
+        if (tomTom.map.loaded()) clearPopup();
       }
     </script>
-    <script src="main.js"></script>
+    <script type="text/javascript">
+      function CurrentWeatherDataOptions(options) {
+        this.options = options;
+
+        if (!options.hasOwnProperty('url'))
+          options.url = 'https://api.openweathermap.org/data/2.5/weather';
+      }
+
+      CurrentWeatherDataOptions.prototype.go = function () {
+        const options = this.options;
+
+        return new Promise(function (fulfill, reject) {
+          if (!formatLocationUrl(options)) {
+            reject('currentWeatherData call is invalid.');
+            return;
+          }
+
+          fetchResponse(options, fulfill, reject);
+        });
+
+        function addOptionalParameter(options, name) {
+          if (options.hasOwnProperty(name)) addParameter(options, name);
+        }
+
+        function addParameter(options, name, value) {
+          options.url += options.hasParameters ? '&' : '?';
+          options.url +=
+            name + '=' + encodeURIComponent(value || options[name]);
+          options.hasParameters = true;
+        }
+
+        function fetchResponse(options, fulfill, reject) {
+          fetch(options.url, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'same-origin',
+          })
+            .then(function (response) {
+              parseResponse(response, fulfill, reject);
+            })
+            .catch(function (error) {
+              reject(error);
+            });
+        }
+
+        function formatLocationUrl(options) {
+          if (!hasOwnProperties(options, ['appid', 'lat', 'lon'])) return false;
+
+          addParameter(options, 'lat', options.lat);
+          addParameter(options, 'lon', options.lon);
+          addOptionalParameter(options, 'units');
+          addParameter(options, 'appid');
+          return true;
+        }
+
+        function hasOwnProperties(options, properties) {
+          if (options == null) return false;
+
+          for (const property of properties)
+            if (!options.hasOwnProperty(property)) return false;
+
+          return true;
+        }
+
+        function parseResponse(response, fulfill, reject) {
+          response
+            .json()
+            .then(function (obj) {
+              if (!obj.hasOwnProperty('error')) fulfill(obj);
+              else reject(obj.error.description);
+            })
+            .catch(function (error) {
+              reject(error);
+            });
+        }
+      };
+
+      function currentWeatherData(options) {
+        return new CurrentWeatherDataOptions(options);
+      }
+    </script>
   </body>
 </html>

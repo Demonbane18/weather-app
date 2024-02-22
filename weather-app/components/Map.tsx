@@ -5,7 +5,6 @@ import WebView, { WebViewMessageEvent } from 'react-native-webview';
 import { PermissionsAndroid } from 'react-native';
 import * as Location from 'expo-location';
 type Props = {
-  //   onInitialized: (zoomToGeoJSONFunc: () => void) => void;
   onMapPress: (coordinates: [number, number]) => void;
 };
 
@@ -19,10 +18,6 @@ const Map = (props: Props) => {
 
   const webViewRef = useRef<WebView | null>();
 
-  //   const zoomToGeoJSON = () => {
-  //     webViewRef.current?.injectJavaScript('window.zoomToGeoJSON(); true');
-  //   };
-
   useEffect(() => {
     userLocation();
     if (assets) {
@@ -30,7 +25,6 @@ const Map = (props: Props) => {
         .then((res) => res.text())
         .then((html) => {
           setHtmlString(html);
-          //   onInitialized(zoomToGeoJSON);
         });
     }
   }, [assets]);
@@ -60,6 +54,7 @@ const Map = (props: Props) => {
         html: htmlString,
       }}
       javaScriptEnabled
+      originWhitelist={['*']}
       style={{
         width: dimensions.width,
         height: dimensions.height,
