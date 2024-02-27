@@ -1,27 +1,24 @@
 
 Home Screen
-    ☐ google Maps API with marker of user location on home screen
+    ✔ google Maps API with marker of user location on home screen @done (2/27/2024, 10:05:31 AM)
     ✔ bottom sheet with temperature and city name that can be expanded to Screen 2 @done (2/14/2024, 1:23:46 AM)
-    ☐ clicking marker show info
-    ☐ save photo location (optional) 
+    ☐ display only the weather for the day
+    ✔ clicking marker show info @done (2/27/2024, 10:06:10 AM)
 
 NowCast Screen (modal)
-    ☐ add icons to data
+    ✔ add icons to data @done (2/27/2024, 10:05:34 AM)
     ✔ display 5 day forecast @done (2/12/2024, 11:11:38 AM)
     ✔ display 3 hour forecast @done (2/12/2024, 11:11:40 AM)
-    ☐ display cloud cover, humidity, air pressure, rate of rainfall
-    ☐ add searchbar to find city and give data (optional)
-    ☐ Activity indicator for bottom sheet
+    ✔ display cloud cover, humidity, air pressure, rate of rainfall @done (2/27/2024, 10:05:37 AM)
+    ✔ add searchbar to find city and give data (optional) @done (2/27/2024, 10:05:39 AM)
+    ✔ Activity indicator for bottom sheet @done (2/27/2024, 10:05:43 AM)
 Map screen
-☐ Cloud cover map
-☐ Precipitation map
+✔ Cloud cover map @done (2/27/2024, 10:05:48 AM)
+✔ Precipitation map @done (2/27/2024, 10:05:50 AM)
 
 
 
 Settings Screen
-☐ Async storage settings
-☐ temperature
-☐ humidity
-☐ air pressure
-☐ precipitation/rate of rainfall 
-☐ location access
+✔ Async storage settings @done (2/27/2024, 10:05:54 AM)
+
+✔ location access @done (2/27/2024, 10:06:00 AM)
