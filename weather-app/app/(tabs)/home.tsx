@@ -14,7 +14,9 @@ import DataItem from '@/components/DataItem';
 import { Stack } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import { StatusBar } from 'expo-status-bar';
+import dayjs from 'dayjs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import timeToUnix from '@/assets/functions/timeConverter';
 import BottomSheet, {
   BottomSheetView,
   BottomSheetFlatList,
@@ -97,18 +99,18 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState<boolean>();
   const [units, setUnits] = useState<string>('metric');
 
-  useEffect(() => {
-    //Implementing the setInterval method
-    const interval = setInterval(() => {
-      getData();
-      fetchWeather();
-      fetchForecast();
-      fetchWeatherInfo();
-    }, 5000);
+  // useEffect(() => {
+  //   //Implementing the setInterval method
+  //   const interval = setInterval(() => {
+  //     getData();
+  //     fetchWeather();
+  //     fetchForecast();
+  //     fetchWeatherInfo();
+  //   }, 5000);
 
-    //Clearing the interval
-    return () => clearInterval(interval);
-  }, [units, weather, forecast, weatherInfo]);
+  //   //Clearing the interval
+  //   return () => clearInterval(interval);
+  // }, [units, weather, forecast, weatherInfo]);
   useEffect(() => {
     if (location) {
       fetchWeather();
@@ -165,8 +167,17 @@ export default function HomeScreen() {
       `${PRO_URL}/forecast/hourly?lat=${location.coords.latitude}&lon=${location.coords.longitude}&appid=${OPEN_WEATHER_KEY}&units=${units}`
     );
     const data = await results.json();
-    // console.log(JSON.stringify(data, null, 2));
-    setForecast(data.list);
+    //console.log(JSON.stringify(data.list, null, 2));
+    const weatherList = data.list;
+
+    const timeToday = dayjs().format('YYYY-MM-DD');
+    const dayList = weatherList.filter((weatherHour: any) => {
+      const date = dayjs(weatherHour.dt * 1000).format('YYYY-MM-DD');
+      return String(date) === String(timeToday);
+      //return String(weatherHour.dt_text) === '2024-02-28 05:00:00';
+    });
+    console.log('Daylist:', JSON.stringify(dayList, null, 2));
+    setForecast(dayList);
   };
 
   const fetchWeatherInfo = async () => {
@@ -430,7 +441,7 @@ export default function HomeScreen() {
             renderItem={({ item }) => <DataItem weatherInfo={item} />}
           />
         </BottomSheetView>
-        <Text style={styles.header}>5 Day Forecast</Text>
+        <Text style={styles.header}>Today's Forecast</Text>
         <BottomSheetView style={styles.contentContainer}>
           <FlatList
             data={forecast}
